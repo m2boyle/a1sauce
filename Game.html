@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Narrows Game</title>
+  <style>
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      background-image: url('assets/img/mars.jpg'); /* Replace with the actual image file name and extension */
+      background-size: cover;
+      position: relative;
+    }
+
+    canvas {
+      border: 2px solid #000;
+      background-color: rgba(255, 255, 255, 0.7); /* White background with 70% opacity */
+    }
+
+    #header-container {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      text-align: center;
+      width: 100%;
+    }
+
+    #header {
+      font-size: 36px;
+      color: #000; /* Black color for the text */
+      font-weight: bold;
+      text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.8); /* Text shadow for better visibility */
+      margin-bottom: 10px;
+    }
+
+    #subHeader {
+      font-size: 24px;
+      color: #000; /* Black color for the text */
+      font-weight: bold;
+      text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.8); /* Text shadow for better visibility */
+      margin-bottom: 20px;
+    }
+
+    #navigation-container {
+      position: absolute;
+      top: 50%;
+      left: 10px;
+      transform: translateY(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .navigation-button {
+      margin-bottom: 10px;
+      padding: 10px;
+      font-size: 18px;
+      color: #fff;
+      background-color: #000;
+      border: none;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div id="header-container">
+    <div id="header"> THE NARROWS GAME</div>
+    <div id="subHeader">Press Space Bar to Start</div>
+  </div>
+  <div id="navigation-container">
+    <button class="navigation-button" onclick="navigateTo('index.html')">Back</button>
+    <button class="navigation-button" onclick="navigateTo('Tutorial.html')">Tutorial</button>
+    <!-- Add more buttons as needed -->
+  </div>
+  <canvas id="gameCanvas" width="400" height="400"></canvas>
+
+  <script>
+    // Function to navigate to a different page
+    function navigateTo(page) {
+      window.location.href = page;
+    }
+
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+
+    const bird = {
+      x: 50,
+      y: canvas.height / 2 - 15,
+      size: 30,
+      color: '#000000', // Black
+      velocity: 0,
+      gravity: 0.09,
+      jumpStrength: -4.1,
+    };
+
+    const pipes = [];
+    const pipeWidth = 50;
+    const pipeHeight = 150;
+    const pipeGap = 240;
+    const pipeVelocity = 2;
+
+    let score = 0;
+
+    function drawBird() {
+  ctx.fillStyle = bird.color;
+  ctx.beginPath();
+  ctx.arc(bird.x + bird.size / 2, bird.y + bird.size / 2, bird.size / 2, 0, 2 * Math.PI);
+  ctx.fill();
+}
+function drawPipes() {
+  ctx.fillStyle = '#a79359'; // Green
+  pipes.forEach(pipe => {
+    ctx.fillRect(pipe.x, 0, pipeWidth, pipe.height);
+    ctx.fillRect(pipe.x, pipe.height + pipeGap, pipeWidth, canvas.height - (pipe.height + pipeGap));
+  });
+}
+
+
+    function drawScore() {
+      ctx.fillStyle = '#000';
+      ctx.font = '24px Arial';
+      ctx.fillText(`Score: ${score}`, 10, 30);
+    }
+
+    function update() {
+  bird.velocity += bird.gravity;
+  bird.y += bird.velocity;
+
+  // Check for collisions with pipes
+  for (const pipe of pipes) {
+    if (
+      bird.x < pipe.x + pipeWidth &&
+      bird.x + bird.size > pipe.x &&
+      (bird.y < pipe.height || bird.y + bird.size > pipe.height + pipeGap)
+    ) {
+      alert(`Game Over! Your score: ${score}`);
+      resetGame();
+    }
+  }
+
+  // Check if bird passed a pipe
+  pipes.forEach(pipe => {
+    if (bird.x > pipe.x + pipeWidth && !pipe.passed) {
+      pipe.passed = true;
+      score++;
+    }
+  });
+
+  // Remove off-screen pipes
+  pipes.filter(pipe => pipe.x + pipeWidth > 0);
+
+  // Update pipe positions
+  pipes.forEach(pipe => {
+    pipe.x -= pipeVelocity;
+  });
+
+  // Generate new pipes
+  if (Math.random() < 0.013) {
+    const pipeHeight = Math.floor(Math.random() * (canvas.height - pipeGap));
+    pipes.push({ x: canvas.width, height: pipeHeight, passed: false });
+  }
+}
+
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawBird();
+      drawPipes();
+      drawScore();
+    }
+
+    function resetGame() {
+      bird.y = canvas.height / 2 - 15;
+      bird.velocity = 0;
+      pipes.length = 0;
+      score = 0;
+    }
+
+    function gameLoop() {
+      update();
+      draw();
+      requestAnimationFrame(gameLoop);
+    }
+
+    document.addEventListener('keydown', function(event) {
+      if (event.code === 'Space') {
+        bird.velocity = bird.jumpStrength;
+      }
+    });
+
+    gameLoop();
+  </script>
+</body>
+</html>
+
